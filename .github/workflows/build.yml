@@ -33,13 +33,16 @@ jobs:
           $FLUTTER = "$HOME/.flutter"
           echo "FLUTTER=$FLUTTER" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_ENV
           echo "$FLUTTER/bin" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_PATH
-          if (-not (Test-Path "$FLUTTER/bin/flutter")) {
-            Remove-Item "$FLUTTER" -Force -Recurse
-            git clone https://github.com/flutter/flutter.git -b stable "$FLUTTER"
-          }
-          else {
+          if (Test-Path "$FLUTTER/bin/flutter") {
             Write-Host "Using cached Flutter SDK"
           }
+          else {
+            if (Test-Path "$FLUTTER") {
+              Remove-Item "$FLUTTER" -Force -Recurse -ErrorAction SilentlyContinue
+            }
+            git clone https://github.com/flutter/flutter.git -b stable "$FLUTTER"
+          }
+
         shell: powershell
     
       - name: Install Flutter (Linux)
