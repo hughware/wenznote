@@ -11,6 +11,9 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: 'android'
+            target-platform: 'android-arm64'
+          - os: ubuntu-latest
+            platform: 'linux'
           - os: windows-latest
             platform: 'windows'
     runs-on: ${{ matrix.os }}
@@ -42,7 +45,6 @@ jobs:
             }
             git clone https://github.com/flutter/flutter.git -b stable "$FLUTTER"
           }
-
         shell: powershell
     
       - name: Install Flutter (Linux)
@@ -76,7 +78,7 @@ jobs:
         with:
           path: |
             $ANDROID_HOME/build-tools
-          key: build-tools-${{ runner.os }}-${{ hashFiles('path/to/lock/file') }}
+          key: build-tools-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml', '**/pubspec.lock', '.github/workflows/flutter_version') }}
           restore-keys: |
             build-tools-${{ runner.os }}-
 
@@ -85,16 +87,16 @@ jobs:
         with:
           path: |
             $ANDROID_HOME/platforms
-          key: platforms-${{ runner.os }}-${{ hashFiles('path/to/lock/file') }}
+          key: platforms-${{ runner.os }}-${{ hashFiles('**/pubspec.lock', '**/pubspec.lock', '.github/workflows/flutter_version') }}
           restore-keys: |
             platforms-${{ runner.os }}-
 
       - name: Build APK
-        if: matrix.platform == 'android'
-        run: flutter build apk --release --target-platform android-arm
+        if: matrix.platform == 'android-arm64'
+        run: flutter build apk --release --target-platform android-arm64
 
       # - name: Build App Bundle
-      #   if: matrix.platform == 'android'
+      #   if: matrix.platform == 'android-arm64'
       #   run: flutter build appbundle --release
         
       - name: Build Linux
@@ -106,7 +108,7 @@ jobs:
         run: flutter build windows --release
 
       - name: Upload APK Artifact
-        if: matrix.platform == 'android'
+        if: matrix.platform == 'android-arm64'
         uses: actions/upload-artifact@v3
         with:
           name: android-app
