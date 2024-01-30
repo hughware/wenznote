@@ -1,0 +1,58 @@
+name: Flutter Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            !**/.*/** # Exclude hidden files and folders
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml', '**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-flutter-
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '2.17.6'
+
+      - name: Get Flutter packages
+        run: flutter pub get
+      - name: Build APK
+        if: matrix.platform == 'android'
+        run: flutter build apk --release
+
+      - name: Build App Bundle
+        if: matrix.platform == 'android'
+        run: flutter build appbundle --release
+        
+      - name: Build Linux
+        if: matrix.platform == 'linux'
+        run: flutter build linux --release
+        
+      - name: Build Windows
+        if: matrix.platform == 'windows'
+        run: flutter build windows --release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform }}-app
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+            build/linux/*
+            build/windows/runner/Release/*
+          if-no-files-found: error
