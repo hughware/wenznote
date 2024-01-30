@@ -1,7 +1,7 @@
 name: Flutter Build
 
 on:
-  push:
+  # push:
   workflow_dispatch:
 
 jobs:
@@ -92,15 +92,15 @@ jobs:
             platforms-${{ runner.os }}-
 
       - name: Build APK
-        if: matrix.platform == 'android-arm64'
+        if: matrix.platform == 'android' && matrix['target-platform'] == 'android-arm64'
         run: flutter build apk --release --target-platform android-arm64
 
       # - name: Build App Bundle
-      #   if: matrix.platform == 'android-arm64'
+      #   if: matrix.platform == 'android'
       #   run: flutter build appbundle --release
 
       - name: Upload APK Artifact
-        if: matrix.platform == 'android-arm64'
+        if: matrix.platform == 'android'
         uses: actions/upload-artifact@v3
         with:
           name: android-app
