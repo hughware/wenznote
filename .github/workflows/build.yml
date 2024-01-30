@@ -8,7 +8,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            platform: 'android'
+          - os: windows-latest
+            platform: 'windows'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout the code
