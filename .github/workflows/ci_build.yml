@@ -44,7 +44,24 @@ jobs:
             echo "Using cached Flutter SDK"
           fi
         shell: bash
-  
+
+      - name: Install Flutter (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $FLUTTER = "$HOME/.flutter"
+          echo "FLUTTER=$FLUTTER" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_ENV
+          echo "$FLUTTER/bin" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_PATH
+          if (Test-Path "$FLUTTER/bin/flutter") {
+            Write-Host "Using cached Flutter SDK"
+          }
+          else {
+            if (Test-Path "$FLUTTER") {
+              Remove-Item "$FLUTTER" -Force -Recurse -ErrorAction SilentlyContinue
+            }
+            git clone https://github.com/flutter/flutter.git -b stable "$FLUTTER"
+          }
+        shell: powershell
+    
       - name: Cache Linux Flutter dependencies
         if: runner.os == 'Linux'
         uses: actions/cache@v3
