@@ -61,7 +61,7 @@ jobs:
           fi
         shell: bash
   
-      - name: Cache Flutter dependencies
+      - name: Cache Linux Flutter dependencies
         uses: actions/cache@v3
         with:
           path: |
@@ -70,14 +70,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-cache-
             
-      - name: Get Flutter packages
-        run: flutter pub get
-        
+      - name: Cache Windows Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            %USERPROFILE%\.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('**/pubspec.yaml', '**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
       - name: Cache Android SDK Build-Tools
         uses: actions/cache@v3
         with:
           path: |
-            $ANDROID_HOME/build-tools
+           /usr/local/lib/android/sdk/build-tools
           key: build-tools-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml', '**/pubspec.lock', '.github/workflows/flutter_version') }}
           restore-keys: |
             build-tools-${{ runner.os }}-
@@ -86,11 +92,26 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            $ANDROID_HOME/platforms
-          key: platforms-${{ runner.os }}-${{ hashFiles('**/pubspec.lock', '**/pubspec.lock', '.github/workflows/flutter_version') }}
+            /usr/local/lib/android/sdk/platforms
+          key: platforms-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml', '**/pubspec.lock', '.github/workflows/flutter_version') }}
           restore-keys: |
             platforms-${{ runner.os }}-
 
+      - name: Cache Win Build SDK 
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/windows-x64-debug/windows-x64-flutter
+            **/windows-x64/flutter-cpp-client-wrapper
+            **/windows-x64-profile/windows-x64-flutter
+            **/windows-x64-release/windows-x64-flutter
+          key: win-flutter-build-sdk-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml', '**/pubspec.lock', '.github/workflows/flutter_version') }}
+          restore-keys: |
+            platforms-${{ runner.os }}-
+            
+      - name: Get Flutter packages
+        run: flutter pub get
+        
       - name: Build APK
         if: matrix.platform == 'android' && matrix['target-platform'] == 'android-arm64'
         run: flutter build apk --release --target-platform android-arm64
@@ -109,7 +130,7 @@ jobs:
           # build/app/outputs/bundle/release/app-release.aab
 
       - name: Setup Linux dependencies
-        if: runner.os == 'Linux'
+        if:  matrix.platform == 'linux'
         run: |
             sudo apt-get update && sudo apt-get install -y cmake ninja-build clang pkg-config libgtk-3-dev
         shell: bash
@@ -128,6 +149,17 @@ jobs:
       - name: Build Windows
         if: matrix.platform == 'windows'
         run: flutter build windows --release
+
+      - name: Search and print windows-x64-flutter path
+        run: |
+          $searchRoot = "C:\\" 
+          $searchResults = Get-ChildItem -Path $searchRoot -Filter "windows-x64-flutter*" -Recurse -ErrorAction SilentlyContinue -Force
+          foreach ($result in $searchResults) {
+            if ($result.FullName -like "*windows-x64-debug*") {
+              Write-Host "Found path: $($result.FullName)"
+            }
+          }
+        shell: pwsh
 
       - name: Upload Windows Artifact
         if: matrix.platform == 'windows'
