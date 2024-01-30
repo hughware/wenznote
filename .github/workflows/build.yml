@@ -27,7 +27,23 @@ jobs:
           restore-keys: |
             flutter-sdk-${{ runner.os }}-
   
-      - name: Install Flutter
+      - name: Install Flutter (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $FLUTTER = "$HOME/.flutter"
+          echo "FLUTTER=$FLUTTER" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_ENV
+          echo "$FLUTTER/bin" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_PATH
+          if (-not (Test-Path "$FLUTTER/bin/flutter")) {
+            Remove-Item "$FLUTTER" -Force -Recurse
+            git clone https://github.com/flutter/flutter.git -b stable "$FLUTTER"
+          }
+          else {
+            Write-Host "Using cached Flutter SDK"
+          }
+        shell: powershell
+    
+      - name: Install Flutter (Linux)
+        if: runner.os == 'Linux'
         run: |
           FLUTTER="$HOME/.flutter"
           echo "FLUTTER=$FLUTTER" >> $GITHUB_ENV
@@ -38,6 +54,7 @@ jobs:
           else
             echo "Using cached Flutter SDK"
           fi
+        shell: bash
   
       - name: Cache Flutter dependencies
         uses: actions/cache@v3
