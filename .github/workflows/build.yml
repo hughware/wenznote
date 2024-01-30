@@ -46,13 +46,25 @@ jobs:
         if: matrix.platform == 'windows'
         run: flutter build windows --release
 
-      - name: Upload Artifacts
+      - name: Upload APK Artifact
+        if: matrix.platform == 'android'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.platform }}-app
+          name: android-app
           path: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
-            build/linux/*
-            build/windows/runner/Release/*
-          if-no-files-found: error
+
+      - name: Upload Linux Artifact
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-app
+          path: build/linux/*
+
+      - name: Upload Windows Artifact
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-app
+          path: build/windows/runner/Release/*
