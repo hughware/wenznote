@@ -107,7 +107,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ios-app
-          path: /Users/runner/work/wenznote/wenznote/build/ios/iphoneos/*.ipa
+          path: /Users/runner/work/wenznote/wenznote/build/ios/iphoneos/*.app
 
       - name: Upload Artifact for macOS
         if: matrix.platform == 'macos'
