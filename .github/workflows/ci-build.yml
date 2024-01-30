@@ -11,6 +11,7 @@ jobs:
   setup:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -28,11 +29,35 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: subosito/flutter-action@v2
+      - name: Install Flutter SDK
+        if: matrix.platform == 'windows'
+        run: |
+          $FLUTTER = "$HOME\f\.flutter"
+          $FLUTTER_BIN = "$FLUTTER\bin"
+          echo "FLUTTER=$FLUTTER" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_ENV
+          echo "$FLUTTER_BIN" | Out-File -Append -Encoding ASCII -FilePath $env:GITHUB_PATH
+          if (!(Test-Path "$FLUTTER_BIN\flutter")) {
+            if (Test-Path "$FLUTTER") {
+              Remove-Item "$FLUTTER" -Force -Recurse -ErrorAction SilentlyContinue
+            }
+            git clone --depth 1 -b $env:FLUTTER_VERSION https://github.com/flutter/flutter.git "$FLUTTER"
+          }
+          else {
+            Write-Host "Using cached Flutter SDK"
+          }
+        shell: powershell
+        env:
+          GIT_TRACE: 1
+          GIT_CURL_VERBOSE: 1
+
+      - name: Install Flutter SDK (non-Windows)
+        if: matrix.platform != 'windows'
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-      
+
       - run: flutter pub get
+      - run: flutter test
 
       - name: Build for Android
         if: matrix.platform == 'android'
@@ -57,12 +82,6 @@ jobs:
         if: matrix.platform == 'macos'
         run: flutter build macos --release
 
-      - name: Build APK for release
-        if: matrix.platform == 'android'
-        run: flutter build apk --release
-
-      # Upload artifacts steps would go here...
-
   finalize:
     needs: setup
     runs-on: ${{ matrix.os }}
@@ -77,21 +96,20 @@ jobs:
             artifact-path: 'build/linux/*'
           - platform: 'windows'
             artifact-name: 'windows-app'
-            artifact-path: 'build/windows/x64/runner/Release/*'
+            artifact-path: 'build/windows/runner/Release/*'
           - platform: 'ios'
-            artifact-name: 'iOS-app'
+            artifact-name: 'ios-app'
             artifact-path: 'build/ios/iphoneos/*.ipa'
           - platform: 'macos'
-            artifact-name: 'macOS-app'
+            artifact-name: 'macos-app'
             artifact-path: 'build/macos/Build/Products/Release/*'
 
     steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.artifact-path }}
+      - name: Download artifacts from setup job
+        uses: actions/download-artifact@v3
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact-name }}
           path: ${{ matrix.artifact-path }}
