@@ -100,14 +100,14 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: windows-app
-          path: build/windows/runner/Release/*
+          path: build/windows/x64/runner/Release/*
 
       - name: Upload Artifact for iOS
         if: matrix.platform == 'ios'
         uses: actions/upload-artifact@v3
         with:
           name: ios-app
-          path: build/ios/iphoneos/*.ipa
+          path: /Users/runner/work/wenznote/wenznote/build/ios/iphoneos/*.ipa
 
       - name: Upload Artifact for macOS
         if: matrix.platform == 'macos'
