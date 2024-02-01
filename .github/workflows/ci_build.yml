@@ -21,9 +21,9 @@ jobs:
             platform: 'linux'
           - os: windows-latest
             platform: 'windows'
-          - os: macos-14
+          - os: macos-14-arm64
             platform: 'ios'
-          - os: macos-14
+          - os: macos-14-arm64
             platform: 'macos'
     steps:
       - uses: actions/checkout@v4
